@@ -459,10 +459,10 @@ export default class LayerManager {
   }
 
   _transferLayerState(oldLayer, newLayer) {
-    const {state, props} = oldLayer;
+    const {state, internalState, props} = oldLayer;
 
     // sanity check
-    assert(state, 'deck.gl sanity check - Matching layer has no state');
+    assert(state && internalState, 'deck.gl sanity check - Matching layer has no state');
     if (newLayer !== oldLayer) {
       log(LOG_PRIORITY_LIFECYCLE_MINOR,
         `matched ${layerName(newLayer)}`, oldLayer, '->', newLayer);
@@ -470,6 +470,7 @@ export default class LayerManager {
       // Move state
       state.layer = newLayer;
       newLayer.state = state;
+      newLayer.internalState = internalState;
 
       // Update model layer reference
       for (const model of newLayer.getModels()) {

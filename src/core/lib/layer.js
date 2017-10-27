@@ -83,6 +83,7 @@ export default class Layer {
     this.lifecycle = LIFECYCLE.NO_STATE; // Helps track and debug the life cycle of the layers
     this.state = null; // Will be set to the shared layer state object during layer matching
     this.context = null; // Will reference layer manager's context, contains state shared by layers
+    this.parentLayer = null; // reference to the composite layer parent that rendered this layer
 
     // CompositeLayer members, need to be defined here because of the `Object.seal`
     this.internalState = null;
@@ -353,7 +354,6 @@ export default class Layer {
     });
 
     this.internalState = {
-      parentLayer: null,   // reference to the composite layer parent that rendered this layer
       subLayers: [],       // reference to sublayers rendered in a previous cycle
       stats: new Stats({id: 'draw'})
       // TODO - move these fields here (risks breaking layers)
@@ -376,25 +376,20 @@ export default class Layer {
 
     this.setChangeFlags({dataChanged: true, propsChange: true, viewportChanged: true});
 
-    // Call subclass lifecycle methods
-    this.updateState(this._getUpdateParams({oldContext}));
-    // End subclass lifecycle methods
+    this._updateState(this._getUpdateParams({oldContext}));
 
-    // Add any subclass attributes
-    this.updateAttributes(this.props);
-    this._updateBaseUniforms();
-    this._updateModuleSettings();
+    if (this.isComposite) {
+      this._renderLayers(true);
+    }
 
     const {model} = this.state;
     if (model) {
-      model.setInstanceCount(this.getNumInstances());
       model.id = this.props.id;
       model.program.id = `${this.props.id}-program`;
       model.geometry.id = `${this.props.id}-geometry`;
       model.setAttributes(attributeManager.getAttributes());
     }
 
-    this.clearChangeFlags();
   }
 
   // Called by layer manager
@@ -414,28 +409,32 @@ export default class Layer {
     // End lifecycle method
 
     if (stateNeedsUpdate) {
-      // Call subclass lifecycle method
-      this.updateState(updateParams);
-      // End lifecycle method
+      this._updateState(updateParams);
+    }
 
-      // Run the attribute updaters
-      this.updateAttributes(this.props);
-      this._updateBaseUniforms();
-      this._updateModuleSettings();
-
-      // Note: Automatic instance count update only works for single layers
-      if (this.state.model) {
-        this.state.model.setInstanceCount(this.getNumInstances());
-      }
-
-      if (this.isComposite) {
-        this._renderLayers();
-      }
-
-      this.clearChangeFlags();
+    if (this.isComposite) {
+      this._renderLayers(stateNeedsUpdate);
     }
   }
   /* eslint-enable max-statements */
+
+  _updateState(updateParams) {
+    // Call subclass lifecycle methods
+    this.updateState(updateParams);
+    // End subclass lifecycle methods
+
+    // Add any subclass attributes
+    this.updateAttributes(this.props);
+    this._updateBaseUniforms();
+    this._updateModuleSettings();
+
+    // Note: Automatic instance count update only works for single layers
+    if (this.state.model) {
+      this.state.model.setInstanceCount(this.getNumInstances());
+    }
+
+    this.clearChangeFlags();
+  }
 
   // Called by manager when layer is about to be disposed
   // Note: not guaranteed to be called on application shutdown
