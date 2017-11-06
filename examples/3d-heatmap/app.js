@@ -144,7 +144,7 @@ class Root extends Component {
         mapboxApiAccessToken={MAPBOX_TOKEN}>
         <DeckGLOverlay
           viewport={viewport}
-          radius={100}
+          radius={200}
           data={curData || []}
         />
       </MapGL>

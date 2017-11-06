@@ -3,7 +3,9 @@ import React, {Component} from 'react';
 import DeckGL, {HexagonLayer} from 'deck.gl';
 
 const LIGHT_SETTINGS = {
-  lightsPosition: [-0.144528, 49.739968, 8000, -3.807751, 54.104682, 8000],
+  // lightsPosition: [-0.144528, 49.739968, 8000, -3.807751, 54.104682, 8000],
+  // 38.3675/-8.6771
+  lightsPosition: [-8.6771, 38.3675, 8000, -11.807751, 34.0675, 8000],  
   ambientRatio: 0.4,
   diffuseRatio: 0.6,
   specularRatio: 0.2,
