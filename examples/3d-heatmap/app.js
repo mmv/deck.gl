@@ -21,18 +21,50 @@ function parseResponse(response) {
   response.forEach(function (d) {
     var count = +d["_c0"];
     var date = d["_c1"];
-    var dateValues = perDay[date] || [];
+    var dateValues = perDay[date] || {};
 
-    for (var i = 0; i < Math.sqrt(count * 10) | 0; i++) {
-      dateValues.push([
-        +d["t2.site_lookup_concelhoscentroide_longitude"],
-        +d["t2.site_lookup_concelhoscentroide_latitude"],
-      ]);
+    var lat = d["t2.site_lookup_concelhoscentroide_latitude"];
+    var lng = d["t2.site_lookup_concelhoscentroide_longitude"];
+    var skey = `${lng},${lat}`;
+
+    dateValues[skey] = {
+      count: count,
+      coord: [lng, lat],
     }
+
     perDay[date] = dateValues;
   });
   
   return perDay;
+}
+
+function buildDay(perDay, dkey) {
+  var dayData = perDay[dkey];
+  return Object.keys(dayData).map(key => {
+    var cellData = dayData[key];
+    var ccount = cellData.count;
+    var r = new Array(ccount);
+    for (var c = 0; c < ccount; c++) {
+      r[c] = cellData.coord;
+    }
+    return r;
+  }).reduce((a,b) => a.concat(b), []);
+}
+
+function betweenDays(perDay, dk1, dk2, pc) {
+  var dayData = perDay[dk2];
+  var prevDayData = perDay[dk1];
+  return Object.keys(dayData).map(key => {
+    var cellData = dayData[key];
+    var pcellData = prevDayData[key];
+    var ccount = cellData.count;
+    ccount = (ccount - (ccount - (pcellData && pcellData.count || 0)) * (1 - pc)) | 0;
+    var r = new Array(ccount);
+    for (var c = 0; c < ccount; c++) {
+      r[c] = cellData.coord;
+    }
+    return r;
+  }).reduce((a,b) => a.concat(b), []);
 }
 
 class Root extends Component {
@@ -49,8 +81,9 @@ class Root extends Component {
         zoom: 11,
         elevationRange: [0, 50],
       },
-      dkey: "5",
-      data: null
+      dkey: "0",
+      fullData: null,
+      curData: null,
     };
 
     requestCsv(DATA_URL, (error, response) => {
@@ -58,14 +91,31 @@ class Root extends Component {
         return;
       }
       const data = parseResponse(response);
-      this.setState({data: data});
+      this.setState({fullData: data, curData: buildDay(data, this.state.dkey)});
     });
 
   }
 
+  transitionDay(newDay) {
+    var pc = 0;
+    var iterate = () => {
+      console.log(pc, this.state.curData.length);
+      pc += 0.1;
+      if (pc < 1) {
+        this.setState({curData: betweenDays(this.state.fullData, this.state.dkey, newDay, pc)})
+        setTimeout(iterate, 100);
+      } else {
+        pc = 1;
+        this.setState({curData: buildDay(this.state.fullData, newDay), dkey: newDay});
+      }
+    }
+    iterate();
+  }
+
   componentDidMount() {
     window.addEventListener('resize', this._resize.bind(this));
-    window.setdkey = newkey => this.setState({dkey: newkey});
+    // window.setdkey = newkey => this.setState({dkey: newkey});
+    window.ctransition = newkey => this.transitionDay(newkey);
     this._resize();
 
   }
@@ -84,7 +134,7 @@ class Root extends Component {
   }
 
   render() {
-    const {viewport, data, dkey} = this.state;
+    const {viewport, curData, dkey} = this.state;
 
     return (
       <MapGL
@@ -95,7 +145,7 @@ class Root extends Component {
         <DeckGLOverlay
           viewport={viewport}
           radius={100}
-          data={data && data[dkey] || []}
+          data={curData || []}
         />
       </MapGL>
     );
