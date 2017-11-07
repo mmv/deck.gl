@@ -13,6 +13,7 @@ const MAPBOX_TOKEN = "pk.eyJ1IjoibW12IiwiYSI6ImNqOW42OWNjODIzMDIyd212azFjYzh5Mnk
 // const DATA_URL = 'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv';  // eslint-disable-line
 const DATA_URL = 'IMSI_porHora_porCellID_27Out_Lisboa_2.csv';  // eslint-disable-line
 
+var allCoords = {};
 
 function parseResponse(response) {
 
@@ -26,11 +27,13 @@ function parseResponse(response) {
     var lat = d["t2.site_lookup_concelhoscentroide_latitude"];
     var lng = d["t2.site_lookup_concelhoscentroide_longitude"];
     var skey = `${lng},${lat}`;
+    var coord = [lng, lat];
 
     dateValues[skey] = {
       count: count,
-      coord: [lng, lat],
+      coord: coord,
     }
+    allCoords[skey] = coord;
 
     perDay[date] = dateValues;
   });
@@ -48,7 +51,8 @@ function buildDay(perDay, dkey) {
       r[c] = cellData.coord;
     }
     return r;
-  }).reduce((a,b) => a.concat(b), []);
+  }).reduce((a,b) => a.concat(b), [])
+  .concat(Object.values(allCoords));
 }
 
 function betweenDays(perDay, dk1, dk2, pc) {
@@ -64,7 +68,8 @@ function betweenDays(perDay, dk1, dk2, pc) {
       r[c] = cellData.coord;
     }
     return r;
-  }).reduce((a,b) => a.concat(b), []);
+  }).reduce((a,b) => a.concat(b), [])
+  .concat(Object.values(allCoords));
 }
 
 class Root extends Component {
