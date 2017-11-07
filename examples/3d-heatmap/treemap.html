@@ -8,42 +8,16 @@
 //Simple animated example of d3-cloud - https://github.com/jasondavies/d3-cloud
 //Based on https://github.com/jasondavies/d3-cloud/blob/master/examples/simple.html
 
+var wordData;
 
-// d3.csv("countries.csv", function(error, response) {
-// TODO: convert response to worldData format
+d3.csv("dummydata.csv", function(error, response) {
 
-var wordData = [
-    { instant: "2017-1", country: "Espanha",  v: 0.215256, },
-    { instant: "2017-1", country: "França",  v: 0.169903, },
-    { instant: "2017-1", country: "Reino Unido",  v: 0.122126, },
-    { instant: "2017-1", country: "Alemanha",  v: 0.0702084, },
-    { instant: "2017-1", country: "Países Baixos",  v: 0.0412248, },
-    { instant: "2017-1", country: "Itália",  v: 0.03616, },
-    { instant: "2017-1", country: "Estados Unidos",  v: 0.0347953, },
-    { instant: "2017-1", country: "Coreia do Sul",  v: 0.0331183, },
-    { instant: "2017-1", country: "Brasil",  v: 0.0275171, },
-    { instant: "2017-1", country: "Polónia",  v: 0.0259963, },
-    { instant: "2017-1", country: "Bélgica",  v: 0.0231312, },
+    response.forEach(d => d.v = +d.v);
+    wordData = response;
 
-    { instant: "2017-2", country: "Espanha",    v: 0.10341, },
-    { instant: "2017-2", country: "Reino Unido",    v: 0.15273, },
-    { instant: "2017-2", country: "França",    v: 0.149793, },
-    { instant: "2017-2", country: "Alemanha",    v: 0.0801607, },
-    { instant: "2017-2", country: "Países Baixos",    v: 0.0482166, },
-    { instant: "2017-2", country: "Estados Unidos",    v: 0.0420365, },
-    { instant: "2017-2", country: "Coreia do Sul",    v: 0.0414132, },
-    { instant: "2017-2", country: "Itália",    v: 0.029361, },
-    { instant: "2017-2", country: "Polónia",    v: 0.0271007, },
-    { instant: "2017-2", country: "Brasil",    v: 0.0270106, },
-    { instant: "2017-2", country: "Bélgica",    v: 0.0228505, },
-    { instant: "2017-2", country: "Russia",    v: 0.0228054, },
-]
+    showNewWords(myWordCloud);
 
-// TODO: move call to
-// showNewWords(myWordCloud);
-// from the bottom into here (after we have the data)
-
-// });
+});
 
 
 // Encapsulate the word cloud functionality
@@ -143,9 +117,6 @@ function showNewWords(vis, i) {
 
 //Create a new instance of the word cloud visualisation.
 var myWordCloud = wordCloud('body');
-
-//Start cycling through the demo data
-showNewWords(myWordCloud);
 
 
 </script>
